@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tetris Lite</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: #222;
+      color: #fff;
+      font-family: Arial, sans-serif;
+      text-align: center;
+    }
+    h1 {
+      margin: 10px;
+    }
+    #tetrisCanvas {
+      display: block;
+      margin: 10px auto;
+      background: #333;
+      border: 2px solid #fff;
+    }
+  </style>
+</head>
+<body>
+  <h1>Tetris Lite</h1>
+  <canvas id="tetrisCanvas" width="200" height="400"></canvas>
+
+  <script>
+    const canvas = document.getElementById("tetrisCanvas");
+    const ctx = canvas.getContext("2d");
+    const COLS = 10;
+    const ROWS = 20;
+    const BLOCK_SIZE = 20;
+
+    let board = Array.from({ length: ROWS }, () => Array(COLS).fill(0));
+    let shape = {
+      x: 3,
+      y: 0,
+      blocks: [
+        [1, 1],
+        [1, 1]
+      ]
+    };
+
+    function drawBoard() {
+      for (let r = 0; r < ROWS; r++) {
+        for (let c = 0; c < COLS; c++) {
+          if (board[r][c]) drawBlock(c, r, "cyan");
+          else drawBlock(c, r, "#333");
+        }
+      }
+    }
+
+    function drawShape() {
+      for (let r = 0; r < shape.blocks.length; r++) {
+        for (let c = 0; c < shape.blocks[r].length; c++) {
+          if (shape.blocks[r][c]) {
+            drawBlock(shape.x + c, shape.y + r, "cyan");
+          }
+        }
+      }
+    }
+
+    function drawBlock(x, y, color) {
+      ctx.fillStyle = color;
+      ctx.fillRect(x * BLOCK_SIZE, y * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
+      ctx.strokeStyle = "#111";
+      ctx.strokeRect(x * BLOCK_SIZE, y * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
+    }
+
+    function collide(nx, ny) {
+      for (let r = 0; r < shape.blocks.length; r++) {
+        for (let c = 0; c < shape.blocks[r].length; c++) {
+          if (shape.blocks[r][c]) {
+            let newX = nx + c;
+            let newY = ny + r;
+            if (newX < 0 || newX >= COLS || newY >= ROWS) {
+              return true;
+            }
+            if (board[newY][newX]) return true;
+          }
+        }
+      }
+      return false;
+    }
+
+    function mergeShape() {
+      for (let r = 0; r < shape.blocks.length; r++) {
+        for (let c = 0; c < shape.blocks[r].length; c++) {
+          if (shape.blocks[r][c]) {
+            board[shape.y + r][shape.x + c] = 1;
+          }
+        }
+      }
+    }
+
+    function drop() {
+      if (!collide(shape.x, shape.y + 1)) {
+        shape.y++;
+      } else {
+        mergeShape();
+        shape.x = 3;
+        shape.y = 0;
+      }
+    }
+
+    function update() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drawBoard();
+      drawShape();
+    }
+
+    setInterval(() => {
+      drop();
+      update();
+    }, 500);
+
+    window.addEventListener("keydown", (e) => {
+      switch (e.key) {
+        case "ArrowLeft":
+          if (!collide(shape.x - 1, shape.y)) shape.x--;
+          break;
+        case "ArrowRight":
+          if (!collide(shape.x + 1, shape.y)) shape.x++;
+          break;
+        case "ArrowDown":
+          if (!collide(shape.x, shape.y + 1)) shape.y++;
+          break;
+      }
+      update();
+    });
+  </script>
+</body>
+</html>

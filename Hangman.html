@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hangman Game</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #282c34;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+    }
+    h1 {
+      margin-bottom: 20px;
+    }
+    #word {
+      font-size: 2rem;
+      letter-spacing: 0.5rem;
+    }
+    #letters {
+      margin-top: 20px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .letter {
+      padding: 10px;
+      background-color: #61dafb;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    .letter:hover {
+      opacity: 0.8;
+    }
+    #category, #livesCounter, #remainingLettersCounter, #guessCounter {
+      margin-top: 10px;
+      font-size: 1.2rem;
+    }
+    #hintCounter {
+      margin-top: 10px;
+      font-size: 1rem;
+    }
+    #buttons {
+      margin-top: 20px;
+    }
+    button {
+      padding: 10px 20px;
+      margin: 5px;
+      border: none;
+      border-radius: 8px;
+      background-color: #61dafb;
+      color: #282c34;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+    button:hover {
+      opacity: 0.8;
+    }
+  </style>
+</head>
+<body>
+  <h1>Hangman Game</h1>
+  <div id="category">Category: Animals</div>
+  <div id="livesCounter">Wild Guess Lives: 4</div>
+  <div id="remainingLettersCounter">Remaining Letters: 26</div>
+  <div id="guessCounter">Remaining Guesses: 10</div>
+  <div id="word">_ _ _ _ _</div>
+  <div id="hintCounter">Hints Used: 0</div>
+  <div id="letters"></div>
+  <div id="buttons">
+    <button onclick="singleGuess()">Single Guess</button>
+    <button onclick="guessWord()">I Know It!</button>
+    <button onclick="getHint()">Get Hint</button>
+    <button onclick="goBack()">Back</button>
+    <button onclick="goHome()">Home</button>
+  </div>
+  <button onclick="goToCatalog()">Back to Homepage</button>
+
+  <script>
+    const currentUser = localStorage.getItem('currentUser') || 'player1';
+    let users = JSON.parse(localStorage.getItem('users')) || {
+      player1: { coins: 100, lives: 4, gamesWon: 3 },
+      player2: { coins: 75, lives: 2, gamesWon: 5 }
+    };
+
+    let user = users[currentUser];
+
+    const words = {
+      Animals: ["elephant", "giraffe", "alligator", "kangaroo", "dolphin"]
+    };
+    const category = "Animals";
+    let selectedWord = words[category][Math.floor(Math.random() * words[category].length)].toUpperCase();
+    let guessedLetters = Array(selectedWord.length).fill('_');
+    let hintsUsed = 0;
+
+    document.getElementById("category").textContent = `Category: ${category}`;
+
+    function updateCounters() {
+      document.getElementById("livesCounter").textContent = `Wild Guess Lives: ${user.lives}`;
+      document.getElementById("remainingLettersCounter").textContent = `Remaining Letters: ${26 - guessedLetters.filter(l => l !== '_').length}`;
+      document.getElementById("guessCounter").textContent = `Remaining Guesses: ${10 - hintsUsed}`;
+    }
+
+    function displayWord() {
+      document.getElementById("word").textContent = guessedLetters.join(' ');
+    }
+
+    function createLetterButtons() {
+      const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+      const lettersDiv = document.getElementById("letters");
+      for (const letter of letters) {
+        const button = document.createElement("div");
+        button.textContent = letter;
+        button.className = "letter";
+        button.onclick = () => handleGuess(letter);
+        lettersDiv.appendChild(button);
+      }
+    }
+
+    function handleGuess(letter) {
+      let correct = false;
+      for (let i = 0; i < selectedWord.length; i++) {
+        if (selectedWord[i] === letter) {
+          guessedLetters[i] = letter;
+          correct = true;
+        }
+      }
+      displayWord();
+      updateCounters();
+      if (!correct) {
+        user.lives--;
+        saveData();
+        updateCounters();
+        if (user.lives === 0) {
+          alert("Game Over! You ran out of lives.");
+          if (user.coins >= 75) {
+            if (confirm("Would you like to buy more lives for 75 coins?")) {
+              user.coins -= 75;
+              user.lives = 4;
+              saveData();
+              updateCounters();
+              alert("You have purchased more lives!");
+            }
+          }
+        }
+      }
+    }
+
+    function singleGuess() {
+      const guess = prompt("Enter a single letter:").toUpperCase();
+      if (guess.length === 1 && /^[A-Z]$/.test(guess)) {
+        handleGuess(guess);
+      } else {
+        alert("Please enter a valid single letter.");
+      }
+    }
+
+    function guessWord() {
+      const guess = prompt("Enter your guess:").toUpperCase();
+      if (guess === selectedWord) {
+        alert("Correct! You win!");
+        user.gamesWon++;
+        saveData();
+      } else {
+        alert("Incorrect guess. Try again.");
+        user.lives--;
+        saveData();
+        updateCounters();
+      }
+    }
+
+    function getHint() {
+      hintsUsed++;
+      document.getElementById("hintCounter").textContent = `Hints Used: ${hintsUsed}`;
+      alert("Hint: The word is an animal.");
+    }
+
+    function goBack() {
+      window.history.back();
+    }
+
+    function goHome() {
+      window.location.href = "/index.html";
+    }
+
+    function goToCatalog() {
+      window.location.href = "/index.html";
+    }
+
+    function saveData() {
+      users[currentUser] = user;
+      localStorage.setItem('users', JSON.stringify(users));
+    }
+
+    displayWord();
+    createLetterButtons();
+    updateCounters();
+  </script>
+</body>
+</html>

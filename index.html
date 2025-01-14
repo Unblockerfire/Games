@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Awesome Games Platform</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #282c34;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+    }
+    h1 {
+      margin-bottom: 20px;
+    }
+    .game-list {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .game-item {
+      background-color: #61dafb;
+      padding: 15px 30px;
+      border-radius: 8px;
+      text-align: center;
+      font-size: 20px;
+      cursor: pointer;
+      color: #282c34;
+      text-decoration: none;
+    }
+    .game-item:hover {
+      opacity: 0.9;
+    }
+    #dev-btn {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      background-color: #61dafb;
+      color: #282c34;
+      padding: 10px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    #feedback-section {
+      display: none;
+      margin-top: 20px;
+      background-color: #f4f4f4;
+      color: #333;
+      padding: 20px;
+      border-radius: 8px;
+    }
+    .dev-feature-section {
+      display: none;
+      margin-top: 20px;
+      background-color: #f4f4f4;
+      color: #333;
+      padding: 20px;
+      border-radius: 8px;
+    }
+  </style>
+</head>
+<body>
+  <h1>🎮 Welcome to Awesome Games!</h1>
+
+  <div class="game-list">
+    <a class="game-item" href="/Hangman/Hangman.html">Hangman</a>
+    <a class="game-item" href="/Pacman/Pacman.html">Pac-Man</a>
+    <a class="game-item" href="/Snake/Snake.html">Snake</a>
+    <a class="game-item" href="/Tetris/Tetris.html">Tetris</a>
+  </div>
+
+  <button id="dev-btn" onclick="enterDevMode()">Dev Mode</button>
+
+  <div id="feedback-section">
+    <h2>Feedback</h2>
+    <ul id="feedback-list"></ul>
+  </div>
+
+  <div id="manage-accounts-section" class="dev-feature-section">
+    <h2>Manage Accounts</h2>
+    <ul id="account-list"></ul>
+  </div>
+
+  <div id="edit-keys-section" class="dev-feature-section">
+    <h2>Edit Keys</h2>
+    <ul id="key-list"></ul>
+    <input type="text" id="new-key" placeholder="Enter New Key">
+    <button onclick="addKey()">Add Key</button>
+  </div>
+
+  <script>
+    const serverUrl = "https://games-vuje.onrender.com";
+
+    // Navigation function to load games
+    function navigateTo(game) {
+      window.location.href = `${serverUrl}/${game}`;
+    }
+
+    // Dev mode function
+    function enterDevMode() {
+      const key = prompt("Enter Dev Key:");
+      if (key === "775772") {
+        alert("Dev Mode Activated!");
+        loadDevFeatures();
+      } else {
+        alert("Incorrect Dev Key.");
+      }
+    }
+
+    // Load Dev features
+    function loadDevFeatures() {
+      fetch(`${serverUrl}/devmode`)
+        .then(response => response.json())
+        .then(data => {
+          if (data.accounts) {
+            const accountList = document.getElementById('account-list');
+            accountList.innerHTML = data.accounts.map(account => `<li>${account.username}</li>`).join('');
+            document.getElementById('manage-accounts-section').style.display = 'block';
+          }
+          if (data.keys) {
+            const keyList = document.getElementById('key-list');
+            keyList.innerHTML = data.keys.map(key => `<li>${key} <button onclick="removeKey('${key}')">Remove</button></li>`).join('');
+            document.getElementById('edit-keys-section').style.display = 'block';
+          }
+        })
+        .catch(error => console.error('Error:', error));
+    }
+
+    // Add a new key in Dev Mode
+    function addKey() {
+      const newKey = document.getElementById('new-key').value;
+      if (newKey) {
+        fetch(`${serverUrl}/addkey`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ key: newKey })
+        })
+        .then(response => response.json())
+        .then(data => {
+          alert(data.message);
+          loadDevFeatures();
+        })
+        .catch(error => console.error('Error:', error));
+      }
+    }
+
+    // Remove a key in Dev Mode
+    function removeKey(key) {
+      fetch(`${serverUrl}/removekey`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key })
+      })
+      .then(response => response.json())
+      .then(data => {
+        alert(data.message);
+        loadDevFeatures();
+      })
+      .catch(error => console.error('Error:', error));
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pac-Man Lite</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: #000;
+      color: #ff0;
+      font-family: Arial, sans-serif;
+      text-align: center;
+    }
+    h1 {
+      margin: 10px;
+    }
+    #gameCanvas {
+      display: block;
+      margin: 10px auto;
+      border: 2px solid #fff;
+      background: #222;
+    }
+  </style>
+</head>
+<body>
+  <h1>Pac-Man Lite</h1>
+  <canvas id="gameCanvas" width="400" height="400"></canvas>
+
+  <script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+
+    let pacX = 50;
+    let pacY = 50;
+    const pacSize = 15;
+    const speed = 5;
+
+    let dots = [];
+    for (let i = 0; i < 20; i++) {
+      dots.push({
+        x: Math.random() * (canvas.width - 10) + 5,
+        y: Math.random() * (canvas.height - 10) + 5,
+        eaten: false
+      });
+    }
+
+    function drawPacMan() {
+      ctx.beginPath();
+      ctx.arc(pacX, pacY, pacSize, 0, Math.PI * 2);
+      ctx.fillStyle = "yellow";
+      ctx.fill();
+      ctx.closePath();
+    }
+
+    function drawDots() {
+      ctx.fillStyle = "#fff";
+      dots.forEach(dot => {
+        if (!dot.eaten) {
+          ctx.beginPath();
+          ctx.arc(dot.x, dot.y, 4, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      });
+    }
+
+    function update() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      dots.forEach(dot => {
+        let dist = Math.hypot(dot.x - pacX, dot.y - pacY);
+        if (dist < pacSize + 4) {
+          dot.eaten = true;
+        }
+      });
+
+      drawDots();
+      drawPacMan();
+      requestAnimationFrame(update);
+    }
+    update();
+
+    window.addEventListener("keydown", (e) => {
+      switch (e.key) {
+        case "ArrowUp":
+          pacY = Math.max(pacY - speed, pacSize);
+          break;
+        case "ArrowDown":
+          pacY = Math.min(pacY + speed, canvas.height - pacSize);
+          break;
+        case "ArrowLeft":
+          pacX = Math.max(pacX - speed, pacSize);
+          break;
+        case "ArrowRight":
+          pacX = Math.min(pacX + speed, canvas.width - pacSize);
+          break;
+      }
+    });
+  </script>
+</body>
+</html>
